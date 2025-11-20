@@ -5,6 +5,7 @@ import { useAppContext } from '@/contexts/AppContext';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
 import { Gauge } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { callCreditPath } from "@/lib/api";
 
 const CreditPathAdvisor = () => {
   const { userData, creditPath, setCreditPath } = useAppContext();
@@ -13,35 +14,50 @@ const CreditPathAdvisor = () => {
 
   const generateCreditPath = async () => {
     if (!userData) {
-      toast({ title: 'Error', description: 'Por favor ingresa tus datos primero', variant: 'destructive' });
+      toast({
+        title: "Error",
+        description: "Por favor ingresa tus datos primero",
+        variant: "destructive",
+      });
       return;
     }
 
     setLoading(true);
-    // Mock API call - en producción esto llamaría a /credit_path
-    setTimeout(() => {
+
+    try {
+      const res = await callCreditPath(userData);
+
       setCreditPath({
-        explanation: `Basado en tus ingresos de ${userData.ingresos.toLocaleString()}€ y una deuda de ${userData.deuda.toLocaleString()}€, tu probabilidad actual de aprobación es del 68%. Si reduces tu deuda en un 30% y mantienes un historial de pagos limpio, tu probabilidad aumentaría al 89%. Los factores que más limitan tu aprobación son: ratio deuda/ingresos y antigüedad laboral.`,
-        currentProbability: 68,
-        improvedProbability: 89,
-        limitingFactors: [
-          { factor: 'Ratio Deuda/Ingresos', impact: 35 },
-          { factor: 'Antigüedad Laboral', impact: 25 },
-          { factor: 'Historial de Pagos', impact: 20 },
-          { factor: 'Importe Solicitado', impact: 15 },
-          { factor: 'Otros Factores', impact: 5 },
-        ],
+        explanation: res.narrative,
+        currentProbability: res.prob_actual,
+        improvedProbability: res.prob_mejorada,
+        limitingFactors: res.limitations.map((l: any) => ({
+          factor: l.factor,
+          impact: l.impacto,
+        })),
       });
+
+      toast({
+        title: "Ruta generada",
+        description: "Tu análisis está listo",
+      });
+    } catch (err) {
+      console.error(err);
+      toast({
+        title: "Error",
+        description: "No se pudo generar la ruta",
+        variant: "destructive",
+      });
+    } finally {
       setLoading(false);
-      toast({ title: 'Ruta generada', description: 'Tu análisis está listo' });
-    }, 1500);
+    }
   };
 
   const probabilityData = creditPath
     ? [
-        { name: 'Actual', value: creditPath.currentProbability },
-        { name: 'Mejorada', value: creditPath.improvedProbability },
-      ]
+      { name: 'Actual', value: creditPath.currentProbability },
+      { name: 'Mejorada', value: creditPath.improvedProbability },
+    ]
     : [];
 
   return (

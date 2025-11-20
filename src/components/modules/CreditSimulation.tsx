@@ -7,6 +7,7 @@ import { useAppContext } from '@/contexts/AppContext';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Sparkles } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { callSimulateScenario } from "@/lib/api";
 
 const CreditSimulation = () => {
   const { userData, simulation, setSimulation } = useAppContext();
@@ -22,37 +23,59 @@ const CreditSimulation = () => {
 
   const simulateScenario = async () => {
     if (!userData) {
-      toast({ title: 'Error', description: 'Por favor ingresa tus datos primero', variant: 'destructive' });
+      toast({
+        title: "Error",
+        description: "Por favor ingresa tus datos primero",
+        variant: "destructive",
+      });
       return;
     }
 
     setLoading(true);
-    // Mock API call - en producción esto llamaría a /simulate_scenario
-    setTimeout(() => {
+
+    try {
+      // usa un valor base o la probabilidad actual del backend si la tienes
       const beforeScore = 68;
-      const afterScore = 82;
+
+      const res = await callSimulateScenario(
+        beforeScore,
+        "reducir_deuda",
+        simParams.deuda
+      );
 
       setSimulation({
-        narrative: `Si reduces tu deuda a ${simParams.deuda.toLocaleString()}€ en los próximos ${simParams.tiempo} meses y solicitas ${simParams.importe.toLocaleString()}€ a ${simParams.plazo} meses, tu puntuación crediticia aumentaría de ${beforeScore} a ${afterScore} puntos. Esto mejoraría significativamente tus probabilidades de aprobación y te permitiría acceder a mejores condiciones. Los factores con mayor impacto serían la reducción del ratio deuda/ingresos (40%) y el aumento de tu capacidad de pago mensual (35%).`,
-        beforeScore,
-        afterScore,
+        narrative: res.narrative,
+        beforeScore: res.before,
+        afterScore: res.after,
         impactFactors: [
-          { factor: 'Ratio Deuda/Ingresos', value: 40 },
-          { factor: 'Capacidad de Pago', value: 35 },
-          { factor: 'Plazo Solicitado', value: 15 },
-          { factor: 'Otros Factores', value: 10 },
+          { factor: "Deuda", value: simParams.deuda },
+          { factor: "Plazo", value: simParams.plazo },
+          { factor: "Tiempo", value: simParams.tiempo },
         ],
       });
+
+      toast({
+        title: "Simulación lista",
+        description: "Escenario generado correctamente",
+      });
+    } catch (err) {
+      console.error(err);
+      toast({
+        title: "Error",
+        description: "No se pudo simular el escenario",
+        variant: "destructive",
+      });
+    } finally {
       setLoading(false);
-      toast({ title: 'Simulación completada', description: 'Escenario analizado' });
-    }, 1500);
+    }
   };
+
 
   const comparisonData = simulation
     ? [
-        { scenario: 'Actual', score: simulation.beforeScore },
-        { scenario: 'Simulado', score: simulation.afterScore },
-      ]
+      { scenario: 'Actual', score: simulation.beforeScore },
+      { scenario: 'Simulado', score: simulation.afterScore },
+    ]
     : [];
 
   const COLORS = ['hsl(var(--accent))', 'hsl(var(--secondary))', 'hsl(var(--violet))', 'hsl(var(--primary))'];

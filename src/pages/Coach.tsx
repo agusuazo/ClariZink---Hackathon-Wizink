@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { useAppContext } from '@/contexts/AppContext';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Send, Sparkles } from 'lucide-react';
+import { callCoachFinanciero } from "@/lib/api";
 
 const Coach = () => {
   const { userType, chatHistory, addChatMessage } = useAppContext();
@@ -31,23 +32,31 @@ const Coach = () => {
   const handleSend = async () => {
     if (!message.trim()) return;
 
+    // 1. Añadir mensaje del usuario a la conversación
     addChatMessage('user', message);
+    const userMessage = message;
     setMessage('');
     setIsTyping(true);
 
-    // Mock AI response - en producción esto llamaría a un endpoint de IA
-    setTimeout(() => {
-      const responses = [
-        'Basado en tu perfil, te recomendaría enfocarte en reducir tu ratio deuda/ingresos. Esto podría aumentar tu probabilidad de aprobación hasta un 15%.',
-        'Excelente pregunta. Con tus ingresos actuales, podrías calificar para préstamos de hasta 25,000€ con condiciones favorables.',
-        'Te sugiero considerar el Préstamo Personal Plus. Tiene una tasa competitiva y tu probabilidad de aprobación es del 89%.',
-        'Si reduces tu deuda en 6 meses, tu puntuación crediticia podría mejorar significativamente. ¿Quieres que simule este escenario?',
-      ];
-      const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-      addChatMessage('assistant', randomResponse);
+    try {
+      // 2. Llamada real al backend
+      const res = await callCoachFinanciero(userMessage);
+
+      // 3. Añadir respuesta del asistente
+      addChatMessage('assistant', res.reply);
+
+    } catch (err) {
+      console.error(err);
+      addChatMessage(
+        'assistant',
+        "He tenido un problema para procesar tu pregunta. Intenta nuevamente en unos segundos."
+      );
+    } finally {
+      // 4. Terminar animación typing
       setIsTyping(false);
-    }, 1500);
+    }
   };
+
 
   const handleSuggestion = (suggestion: string) => {
     setMessage(suggestion);
@@ -84,11 +93,10 @@ const Coach = () => {
             {chatHistory.map((msg, idx) => (
               <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div
-                  className={`max-w-[80%] p-4 rounded-2xl ${
-                    msg.role === 'user'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-accent/10 text-foreground border border-accent/20'
-                  }`}
+                  className={`max-w-[80%] p-4 rounded-2xl ${msg.role === 'user'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-accent/10 text-foreground border border-accent/20'
+                    }`}
                 >
                   <p className="leading-relaxed">{msg.content}</p>
                 </div>
@@ -122,7 +130,7 @@ const Coach = () => {
                 </Button>
               ))}
             </div>
-            
+
             <div className="flex gap-2">
               <Input
                 value={message}

@@ -5,6 +5,7 @@ import { useAppContext } from '@/contexts/AppContext';
 import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts';
 import { TrendingUp } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { callPreApproval } from "@/lib/api";
 
 const PreApprovalFinder = () => {
   const { userData, preApproval, setPreApproval } = useAppContext();
@@ -13,26 +14,46 @@ const PreApprovalFinder = () => {
 
   const findPreApprovals = async () => {
     if (!userData) {
-      toast({ title: 'Error', description: 'Por favor ingresa tus datos primero', variant: 'destructive' });
+      toast({
+        title: "Error",
+        description: "Por favor ingresa tus datos primero",
+        variant: "destructive",
+      });
       return;
     }
 
     setLoading(true);
-    // Mock API call - en producción esto llamaría a /preapproval_finder
-    setTimeout(() => {
+
+    try {
+      const res = await callPreApproval(userData);
+
       setPreApproval({
-        products: [
-          { name: 'Préstamo Personal Plus', probability: 89, amount: 15000, risk: 'Bajo' },
-          { name: 'Crédito Rápido', probability: 76, amount: 10000, risk: 'Medio' },
-          { name: 'Préstamo Flexible', probability: 65, amount: 20000, risk: 'Medio' },
-          { name: 'Crédito Premium', probability: 45, amount: 30000, risk: 'Alto' },
-        ],
-        overallRisk: 28,
+        products: res.productos.map((p: any) => ({
+          name: p.producto,
+          // conviertes "alta/media/baja" en número para los gráficos
+          probability: p.prob === "alta" ? 85 : p.prob === "media" ? 65 : 40,
+          amount: 15000, // placeholder
+          risk: p.prob === "alta" ? "Bajo" : p.prob === "media" ? "Medio" : "Alto",
+        })),
+        overallRisk: 30, // dummy hasta tener lógica del backend
       });
+
+      toast({
+        title: "Análisis completo",
+        description: "Productos recomendados disponibles",
+      });
+    } catch (err) {
+      console.error(err);
+      toast({
+        title: "Error",
+        description: "No se pudo obtener recomendaciones",
+        variant: "destructive",
+      });
+    } finally {
       setLoading(false);
-      toast({ title: 'Análisis completo', description: 'Productos recomendados disponibles' });
-    }, 1500);
+    }
   };
+
 
   const scatterData = preApproval?.products.map(p => ({
     x: p.amount,
