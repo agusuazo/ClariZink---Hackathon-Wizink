@@ -85,10 +85,21 @@ const CreditPathAdvisor = () => {
               <Gauge className="text-accent" />
               Tu Análisis Personalizado
             </h3>
-            <p className="text-foreground leading-relaxed">{creditPath.explanation}</p>
+            <div className="text-foreground leading-relaxed">
+              {creditPath.explanation
+                .replace(/^"|"|^&quot;|&quot;$/g, '')
+                .replace(/&quot;/g, '"')
+                .replace(/\\n/g, '\n')
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .split('\n')
+                .map((line, index) => (
+                  <p key={index} className={line.includes('<strong>') ? 'font-semibold mt-4 mb-2' : 'mb-2'} dangerouslySetInnerHTML={{ __html: line || '&nbsp;' }} />
+                ))
+              }
+            </div>
           </Card>
 
-          <div className="grid md:grid-cols-2 gap-6">
+          <div >
             <Card className="p-6">
               <h4 className="text-lg font-semibold mb-4">Probabilidad de Aprobación</h4>
               <ResponsiveContainer width="100%" height={250}>
@@ -106,7 +117,7 @@ const CreditPathAdvisor = () => {
               </ResponsiveContainer>
             </Card>
 
-            <Card className="p-6">
+            {/* <Card className="p-6">
               <h4 className="text-lg font-semibold mb-4">Factores Limitantes</h4>
               <ResponsiveContainer width="100%" height={250}>
                 <BarChart data={creditPath.limitingFactors} layout="vertical">
@@ -117,7 +128,7 @@ const CreditPathAdvisor = () => {
                   <Bar dataKey="impact" fill="hsl(var(--violet))" radius={[0, 8, 8, 0]} />
                 </BarChart>
               </ResponsiveContainer>
-            </Card>
+            </Card> */}
           </div>
 
           <div className="grid md:grid-cols-2 gap-6">

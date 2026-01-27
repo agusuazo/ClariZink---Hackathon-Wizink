@@ -19,7 +19,7 @@ const CoachFinancieroCTA = () => {
         <div>
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-3 flex items-center justify-center gap-2">
             <Sparkles className="text-accent" />
-            Coach Financiero con IA
+            ClariZink, tu Coach Financiero Personal
           </h2>
           <p className="text-lg text-muted-foreground">
             Conversa con nuestro asistente inteligente para obtener recomendaciones personalizadas,

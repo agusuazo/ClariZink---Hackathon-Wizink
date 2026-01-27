@@ -3,19 +3,20 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAppContext } from '@/contexts/AppContext';
 import { UserCheck, UserPlus } from 'lucide-react';
+import { getUserContext } from '@/lib/userData';
 
 const UserTypeSelector = () => {
   const { setUserType, setUserData } = useAppContext();
 
   const handleClientSelect = () => {
     setUserType('client');
-    // Mock data for existing client
+    const userCtx = getUserContext();
     setUserData({
-      ingresos: 45000,
-      empleo: 'Contrato Indefinido',
-      deuda: 12000,
+      ingresos: userCtx.income,
+      empleo: userCtx.occupation,
+      deuda: Math.round(userCtx.income * 0.1),
       retrasos: 0,
-      importe: 15000,
+      importe: userCtx.creditAmount,
     });
   };
 

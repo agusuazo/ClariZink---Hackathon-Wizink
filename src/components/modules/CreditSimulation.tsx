@@ -157,7 +157,18 @@ const CreditSimulation = () => {
               <Sparkles className="text-violet" />
               Análisis del Escenario
             </h3>
-            <p className="text-foreground leading-relaxed">{simulation.narrative}</p>
+            <div className="text-foreground leading-relaxed">
+              {simulation.narrative
+                .replace(/^"|"$|^&quot;|&quot;$/g, '')
+                .replace(/&quot;/g, '"')
+                .replace(/\\n/g, '\n')
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .split('\n')
+                .map((line, index) => (
+                  <p key={index} className={line.includes('<strong>') ? 'font-semibold mt-4 mb-2' : 'mb-2'} dangerouslySetInnerHTML={{ __html: line || '&nbsp;' }} />
+                ))
+              }
+            </div>
           </Card>
 
           <div className="grid md:grid-cols-2 gap-6">

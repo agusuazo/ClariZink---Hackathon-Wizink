@@ -6,6 +6,7 @@ import { useAppContext } from '@/contexts/AppContext';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Send, Sparkles } from 'lucide-react';
 import { callCoachFinanciero } from "@/lib/api";
+import { getUserContext } from "@/lib/userData";
 
 const Coach = () => {
   const { userType, chatHistory, addChatMessage } = useAppContext();
@@ -15,12 +16,11 @@ const Coach = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Welcome message
     if (chatHistory.length === 0) {
-      const welcomeMsg =
-        userType === 'client'
-          ? '¡Hola! Soy tu Coach Financiero. Veo que ya eres cliente. ¿En qué puedo ayudarte hoy? Puedo ayudarte con tu ruta de aprobación, productos recomendados, simulaciones o cualquier duda sobre créditos.'
-          : '¡Hola! Soy tu Coach Financiero. Estoy aquí para ayudarte a entender mejor tus opciones de crédito. ¿Qué te gustaría saber?';
+      const userCtx = getUserContext();
+      const welcomeMsg = userType === 'client'
+        ? `¡Hola! Soy Clari, tu Coach Financiero. ${userCtx.personalizedGreeting}. Basado en tu perfil ${userCtx.tier}, puedo ayudarte con productos especializados.`
+        : `¡Hola! Soy Clari, tu Coach Financiero. ${userCtx.personalizedGreeting}, estoy aquí para ayudarte con opciones de crédito personalizadas para tu perfil ${userCtx.tier}.`;
       addChatMessage('assistant', welcomeMsg);
     }
   }, []);
@@ -39,10 +39,10 @@ const Coach = () => {
     setIsTyping(true);
 
     try {
-      // 2. Llamada real al backend
-      const res = await callCoachFinanciero(userMessage);
-
-      // 3. Añadir respuesta del asistente
+      const userCtx = getUserContext();
+      const contextualMessage = `Usuario: ${userCtx.personalizedGreeting}, Nivel de riesgo: ${userCtx.riskLevel}. Pregunta: ${userMessage}`;
+      
+      const res = await callCoachFinanciero(contextualMessage);
       addChatMessage('assistant', res.reply);
 
     } catch (err) {
@@ -62,11 +62,12 @@ const Coach = () => {
     setMessage(suggestion);
   };
 
+  const userCtx = getUserContext();
   const suggestions = [
     'Mi Ruta de Aprobación',
-    'Productos Recomendados',
+    `Productos para perfil ${userCtx.tier}`,
     'Simular Cambios',
-    'Duda General',
+    userCtx.recommendations[0] || 'Duda General',
   ];
 
   return (
@@ -80,7 +81,7 @@ const Coach = () => {
           <div>
             <h1 className="text-3xl font-bold text-header-green-foreground flex items-center gap-2">
               <Sparkles />
-              Coach Financiero
+              clariZink, tu Coach Financiero Personal
             </h1>
             <p className="text-header-green-foreground/80">Asistente inteligente personalizado</p>
           </div>
@@ -98,7 +99,18 @@ const Coach = () => {
                     : 'bg-accent/10 text-foreground border border-accent/20'
                     }`}
                 >
-                  <p className="leading-relaxed">{msg.content}</p>
+                  <div className="leading-relaxed">
+                    {msg.content
+                      .replace(/^"|"$|^&quot;|&quot;$/g, '')
+                      .replace(/&quot;/g, '"')
+                      .replace(/\\n/g, '\n')
+                      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                      .split('\n')
+                      .map((line, index) => (
+                        <p key={index} className={line.includes('<strong>') ? 'font-semibold mt-2 mb-1' : 'mb-1'} dangerouslySetInnerHTML={{ __html: line || '&nbsp;' }} />
+                      ))
+                    }
+                  </div>
                 </div>
               </div>
             ))}

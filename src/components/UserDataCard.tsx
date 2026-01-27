@@ -5,19 +5,27 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { useAppContext } from '@/contexts/AppContext';
 import { CheckCircle, Edit2 } from 'lucide-react';
+import { getUserContext } from '@/lib/userData';
 
 const UserDataCard = () => {
   const { userType, userData, setUserData } = useAppContext();
   const [isEditing, setIsEditing] = useState(userType === 'visitor');
-  const [formData, setFormData] = useState(
-    userData || {
-      ingresos: 0,
-      empleo: '',
-      deuda: 0,
-      retrasos: 0,
-      importe: 0,
+  
+  const getInitialData = () => {
+    if (userType === 'visitor') {
+      return userData || { ingresos: 0, empleo: '', deuda: 0, retrasos: 0, importe: 0 };
     }
-  );
+    const userCtx = getUserContext();
+    return userData || {
+      ingresos: userCtx.income,
+      empleo: userCtx.occupation,
+      deuda: Math.round(userCtx.income * 0.1),
+      retrasos: 0,
+      importe: userCtx.creditAmount
+    };
+  };
+  
+  const [formData, setFormData] = useState(getInitialData());
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +52,7 @@ const UserDataCard = () => {
         </div>
         <div className="grid md:grid-cols-2 gap-6">
           <div>
-            <p className="text-sm text-muted-foreground mb-1">Ingresos mensuales</p>
+            <p className="text-sm text-muted-foreground mb-1">Ingresos anuales</p>
             <p className="text-xl font-semibold text-foreground">{userData.ingresos.toLocaleString()}€</p>
           </div>
           <div>
@@ -76,7 +84,7 @@ const UserDataCard = () => {
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid md:grid-cols-2 gap-6">
           <div className="space-y-2">
-            <Label htmlFor="ingresos">Ingresos mensuales (€)</Label>
+            <Label htmlFor="ingresos">Ingresos anuales (€)</Label>
             <Input
               id="ingresos"
               type="number"
