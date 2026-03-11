@@ -119,31 +119,6 @@ AppContext stores UserData
 
 All AI traffic goes through a single backend endpoint. AWS credentials live server-side only.
 
----
-
-## Screenshots
-
-### Landing — user type selector
-![Landing](public/screenshots/01-landing.png)
-
-### Dashboard — user profile + module buttons
-![Dashboard](public/screenshots/02-dashboard.png)
-
-### Module 1 — Credit Path Advisor (AI narrative + probability chart)
-![Credit Path narrative](public/screenshots/03-credit-path-narrative.png)
-![Credit Path chart](public/screenshots/04-credit-path-chart.png)
-
-### Module 2 — PreApproval Finder (product list + risk charts)
-![PreApproval products](public/screenshots/05-preapproval-products.png)
-![PreApproval chart](public/screenshots/06-preapproval-chart.png)
-
-### Module 3 — Credit Simulation (what-if scenario + before/after scores)
-![Simulation narrative](public/screenshots/07-simulation-narrative.png)
-![Simulation scores](public/screenshots/08-simulation-scores.png)
-
-### AI Financial Coach — Clari (chat interface + demo reply)
-![Coach welcome](public/screenshots/09-coach-welcome.png)
-![Coach reply](public/screenshots/10-coach-reply.png)
 
 ---
 
