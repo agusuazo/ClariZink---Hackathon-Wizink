@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAppContext } from '@/contexts/AppContext';
-import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts';
+import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { TrendingUp } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { callPreApproval } from "@/lib/api";
@@ -28,7 +28,7 @@ const PreApprovalFinder = () => {
       const res = await callPreApproval(userData);
 
       setPreApproval({
-        products: res.productos.map((p: any) => ({
+        products: res.productos.map((p) => ({
           name: p.producto,
           // conviertes "alta/media/baja" en número para los gráficos
           probability: p.prob === "alta" ? 85 : p.prob === "media" ? 65 : 40,
@@ -84,6 +84,14 @@ const PreApprovalFinder = () => {
         {loading ? 'Analizando...' : '¿A qué créditos puedo optar?'}
       </Button>
 
+      {!preApproval && (
+        <div className="border-2 border-dashed border-border rounded-xl p-10 text-center text-muted-foreground">
+          <TrendingUp className="w-10 h-10 mx-auto mb-3 opacity-25" />
+          <p className="font-medium">Los productos crediticios disponibles para tu perfil aparecerán aquí.</p>
+          <p className="text-sm mt-1">Verás probabilidades de aprobación y comparativas de riesgo.</p>
+        </div>
+      )}
+
       {preApproval && (
         <div className="space-y-6">
           <Card className="p-6 bg-secondary/5 border-secondary/20">
@@ -124,7 +132,7 @@ const PreApprovalFinder = () => {
                   <YAxis dataKey="y" name="Probabilidad" unit="%" domain={[0, 100]} />
                   <Tooltip cursor={{ strokeDasharray: '3 3' }} />
                   <Scatter data={scatterData} fill="hsl(var(--secondary))">
-                    {scatterData?.map((entry, index) => (
+                    {scatterData?.map((_entry, index) => (
                       <Cell key={`cell-${index}`} fill={`hsl(var(--${index === 0 ? 'accent' : index === 1 ? 'secondary' : 'violet'}))`} />
                     ))}
                   </Scatter>

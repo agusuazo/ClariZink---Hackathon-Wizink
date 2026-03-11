@@ -1,73 +1,152 @@
-# Welcome to your Lovable project
+# ClariZink — Tu Ruta Inteligente al Crédito
 
-## Project info
+> AI-powered financial advisor built for the **WiZink Hackathon**.
+> Analyzes user financial profiles, recommends credit products, and provides personalized improvement roadmaps — all powered by AWS Bedrock AgentCore.
 
-**URL**: https://lovable.dev/projects/556b6f6d-f08b-42c3-b77f-897d1262e572
+---
 
-## How can I edit this code?
+## Features
 
-There are several ways of editing your application.
+| Module | Description |
+|---|---|
+| **Credit Path Advisor** | Computes approval probability and generates an AI narrative with concrete improvement steps |
+| **PreApproval Finder** | Matches the user's financial profile against available WiZink credit products |
+| **Credit Simulation** | What-if scenario modeler — adjust debt, amount, and timeline to see score impact via interactive charts |
+| **AI Financial Coach** | Conversational assistant (Clari) powered by AWS Bedrock AgentCore for open-ended financial Q&A |
 
-**Use Lovable**
+---
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/556b6f6d-f08b-42c3-b77f-897d1262e572) and start prompting.
+## Demo
 
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+Run the app locally with **no backend required** using mock data:
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+VITE_DEMO_MODE=true npm run dev
+```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+All four AI modules return realistic mock responses so you can explore the full UI immediately.
 
-# Step 3: Install the necessary dependencies.
-npm i
+---
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+## Tech Stack
+
+| Layer | Technologies |
+|---|---|
+| Frontend | React 18, TypeScript, Vite |
+| Styling | Tailwind CSS, shadcn/ui |
+| Charts | Recharts |
+| AI Backend | AWS Bedrock AgentCore |
+| State | React Context API, TanStack Query |
+| Routing | React Router v6 |
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js 18+
+- npm
+
+### Quick start (demo mode)
+
+```sh
+git clone https://github.com/agusuazo/ClariZink---Hackathon-Wizink
+cd ClariZink---Hackathon-Wizink
+npm install
+cp .env.example .env          # defaults already set for demo mode
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Open [http://localhost:8080](http://localhost:8080).
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Full setup (with backend)
 
-**Use GitHub Codespaces**
+```sh
+cp .env.example .env
+# Edit .env:
+#   VITE_API_URL=<your-backend-url>
+#   VITE_DEMO_MODE=false
+npm run dev
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+The backend must expose a `POST /coach_financiero` endpoint that proxies to AWS Bedrock AgentCore.
 
-## What technologies are used for this project?
+### Environment Variables
 
-This project is built with:
+| Variable | Default | Description |
+|---|---|---|
+| `VITE_API_URL` | `http://localhost:8000` | Backend API base URL |
+| `VITE_DEMO_MODE` | `false` | Return mock data without a backend |
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+---
 
-## How can I deploy this project?
+## Architecture
 
-Simply open [Lovable](https://lovable.dev/projects/556b6f6d-f08b-42c3-b77f-897d1262e572) and click on Share -> Publish.
+```
+src/
+├── components/
+│   ├── MarkdownResponse.tsx      # Shared safe markdown renderer (no dangerouslySetInnerHTML)
+│   ├── modules/
+│   │   ├── CreditPathAdvisor.tsx # Module 1 — approval probability + AI narrative
+│   │   ├── PreApprovalFinder.tsx # Module 2 — product matching
+│   │   └── CreditSimulation.tsx  # Module 3 — what-if scenario charts
+│   └── ui/                       # shadcn/ui primitives (button, card, input, slider…)
+├── contexts/
+│   └── AppContext.tsx             # Global state — user profile, module results, chat history
+├── lib/
+│   ├── api.ts                    # All API calls + demo mock data
+│   └── userData.ts               # Static WiZink client profile data
+└── pages/
+    ├── Index.tsx                  # Landing page + module dashboard
+    ├── Coach.tsx                  # AI Financial Coach chat interface
+    └── NotFound.tsx
+```
 
-## Can I connect a custom domain to my Lovable project?
+### Data flow
 
-Yes, you can!
+```
+User fills profile (UserDataCard)
+        │
+        ▼
+AppContext stores UserData
+        │
+        ├──► CreditPathAdvisor ──► POST /coach_financiero ──► AWS Bedrock
+        ├──► PreApprovalFinder ──► POST /coach_financiero ──► AWS Bedrock
+        ├──► CreditSimulation  ──► POST /coach_financiero ──► AWS Bedrock
+        └──► Coach (chat)      ──► POST /coach_financiero ──► AWS Bedrock
+```
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+All AI traffic goes through a single backend endpoint. AWS credentials live server-side only.
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+---
+
+## Screenshots
+
+### Landing — user type selector
+![Landing](public/screenshots/01-landing.png)
+
+### Dashboard — user profile + module buttons
+![Dashboard](public/screenshots/02-dashboard.png)
+
+### Module 1 — Credit Path Advisor (AI narrative + probability chart)
+![Credit Path narrative](public/screenshots/03-credit-path-narrative.png)
+![Credit Path chart](public/screenshots/04-credit-path-chart.png)
+
+### Module 2 — PreApproval Finder (product list + risk charts)
+![PreApproval products](public/screenshots/05-preapproval-products.png)
+![PreApproval chart](public/screenshots/06-preapproval-chart.png)
+
+### Module 3 — Credit Simulation (what-if scenario + before/after scores)
+![Simulation narrative](public/screenshots/07-simulation-narrative.png)
+![Simulation scores](public/screenshots/08-simulation-scores.png)
+
+### AI Financial Coach — Clari (chat interface + demo reply)
+![Coach welcome](public/screenshots/09-coach-welcome.png)
+![Coach reply](public/screenshots/10-coach-reply.png)
+
+---
+
+## License
+
+MIT — see [LICENSE](LICENSE).

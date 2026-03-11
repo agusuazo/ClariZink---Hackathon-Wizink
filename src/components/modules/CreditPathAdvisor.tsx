@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAppContext } from '@/contexts/AppContext';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { Gauge } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { callCreditPath } from "@/lib/api";
+import MarkdownResponse from '@/components/MarkdownResponse';
 
 const CreditPathAdvisor = () => {
   const { userData, creditPath, setCreditPath } = useAppContext();
@@ -31,7 +32,7 @@ const CreditPathAdvisor = () => {
         explanation: res.narrative,
         currentProbability: res.prob_actual,
         improvedProbability: res.prob_mejorada,
-        limitingFactors: res.limitations.map((l: any) => ({
+        limitingFactors: res.limitations.map((l) => ({
           factor: l.factor,
           impact: l.impacto,
         })),
@@ -78,6 +79,14 @@ const CreditPathAdvisor = () => {
         {loading ? 'Generando...' : 'Generar mi Ruta de Aprobación'}
       </Button>
 
+      {!creditPath && (
+        <div className="border-2 border-dashed border-border rounded-xl p-10 text-center text-muted-foreground">
+          <Gauge className="w-10 h-10 mx-auto mb-3 opacity-25" />
+          <p className="font-medium">Tu análisis de aprobación crediticia aparecerá aquí.</p>
+          <p className="text-sm mt-1">Incluye probabilidades actuales, mejoradas y factores limitantes.</p>
+        </div>
+      )}
+
       {creditPath && (
         <div className="space-y-6">
           <Card className="p-6 bg-accent/5 border-accent/20">
@@ -86,20 +95,11 @@ const CreditPathAdvisor = () => {
               Tu Análisis Personalizado
             </h3>
             <div className="text-foreground leading-relaxed">
-              {creditPath.explanation
-                .replace(/^"|"|^&quot;|&quot;$/g, '')
-                .replace(/&quot;/g, '"')
-                .replace(/\\n/g, '\n')
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                .split('\n')
-                .map((line, index) => (
-                  <p key={index} className={line.includes('<strong>') ? 'font-semibold mt-4 mb-2' : 'mb-2'} dangerouslySetInnerHTML={{ __html: line || '&nbsp;' }} />
-                ))
-              }
+              <MarkdownResponse content={creditPath.explanation} />
             </div>
           </Card>
 
-          <div >
+          <div>
             <Card className="p-6">
               <h4 className="text-lg font-semibold mb-4">Probabilidad de Aprobación</h4>
               <ResponsiveContainer width="100%" height={250}>
@@ -109,7 +109,7 @@ const CreditPathAdvisor = () => {
                   <YAxis domain={[0, 100]} />
                   <Tooltip />
                   <Bar dataKey="value" radius={[8, 8, 0, 0]}>
-                    {probabilityData.map((entry, index) => (
+                    {probabilityData.map((_entry, index) => (
                       <Cell key={`cell-${index}`} fill={index === 0 ? 'hsl(var(--secondary))' : 'hsl(var(--accent))'} />
                     ))}
                   </Bar>
@@ -117,18 +117,6 @@ const CreditPathAdvisor = () => {
               </ResponsiveContainer>
             </Card>
 
-            {/* <Card className="p-6">
-              <h4 className="text-lg font-semibold mb-4">Factores Limitantes</h4>
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={creditPath.limitingFactors} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                  <XAxis type="number" domain={[0, 40]} />
-                  <YAxis dataKey="factor" type="category" width={120} tick={{ fontSize: 12 }} />
-                  <Tooltip />
-                  <Bar dataKey="impact" fill="hsl(var(--violet))" radius={[0, 8, 8, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </Card> */}
           </div>
 
           <div className="grid md:grid-cols-2 gap-6">

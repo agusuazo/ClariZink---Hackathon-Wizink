@@ -8,6 +8,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { Sparkles } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { callSimulateScenario } from "@/lib/api";
+import MarkdownResponse from '@/components/MarkdownResponse';
 
 const CreditSimulation = () => {
   const { userData, simulation, setSimulation } = useAppContext();
@@ -150,6 +151,14 @@ const CreditSimulation = () => {
         {loading ? 'Simulando...' : 'Simular Escenario'}
       </Button>
 
+      {!simulation && (
+        <div className="border-2 border-dashed border-border rounded-xl p-10 text-center text-muted-foreground">
+          <Sparkles className="w-10 h-10 mx-auto mb-3 opacity-25" />
+          <p className="font-medium">Los resultados de tu simulación aparecerán aquí.</p>
+          <p className="text-sm mt-1">Verás el impacto en tu puntuación crediticia antes y después del escenario.</p>
+        </div>
+      )}
+
       {simulation && (
         <div className="space-y-6">
           <Card className="p-6 bg-violet/5 border-violet/20">
@@ -158,16 +167,7 @@ const CreditSimulation = () => {
               Análisis del Escenario
             </h3>
             <div className="text-foreground leading-relaxed">
-              {simulation.narrative
-                .replace(/^"|"$|^&quot;|&quot;$/g, '')
-                .replace(/&quot;/g, '"')
-                .replace(/\\n/g, '\n')
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                .split('\n')
-                .map((line, index) => (
-                  <p key={index} className={line.includes('<strong>') ? 'font-semibold mt-4 mb-2' : 'mb-2'} dangerouslySetInnerHTML={{ __html: line || '&nbsp;' }} />
-                ))
-              }
+              <MarkdownResponse content={simulation.narrative} />
             </div>
           </Card>
 
@@ -199,7 +199,7 @@ const CreditSimulation = () => {
                     outerRadius={80}
                     label
                   >
-                    {simulation.impactFactors.map((entry, index) => (
+                    {simulation.impactFactors.map((_entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>

@@ -7,22 +7,25 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Send, Sparkles } from 'lucide-react';
 import { callCoachFinanciero } from "@/lib/api";
 import { getUserContext } from "@/lib/userData";
+import MarkdownResponse from '@/components/MarkdownResponse';
 
 const Coach = () => {
   const { userType, chatHistory, addChatMessage } = useAppContext();
   const [message, setMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const welcomeSent = useRef(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (chatHistory.length === 0) {
-      const userCtx = getUserContext();
-      const welcomeMsg = userType === 'client'
-        ? `¡Hola! Soy Clari, tu Coach Financiero. ${userCtx.personalizedGreeting}. Basado en tu perfil ${userCtx.tier}, puedo ayudarte con productos especializados.`
-        : `¡Hola! Soy Clari, tu Coach Financiero. ${userCtx.personalizedGreeting}, estoy aquí para ayudarte con opciones de crédito personalizadas para tu perfil ${userCtx.tier}.`;
-      addChatMessage('assistant', welcomeMsg);
-    }
+    if (welcomeSent.current || chatHistory.length > 0) return;
+    welcomeSent.current = true;
+    const userCtx = getUserContext();
+    const welcomeMsg = userType === 'client'
+      ? `¡Hola! Soy Clari, tu Coach Financiero. ${userCtx.personalizedGreeting}. Basado en tu perfil ${userCtx.tier}, puedo ayudarte con productos especializados.`
+      : `¡Hola! Soy Clari, tu Coach Financiero. ${userCtx.personalizedGreeting}, estoy aquí para ayudarte con opciones de crédito personalizadas para tu perfil ${userCtx.tier}.`;
+    addChatMessage('assistant', welcomeMsg);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -32,7 +35,6 @@ const Coach = () => {
   const handleSend = async () => {
     if (!message.trim()) return;
 
-    // 1. Añadir mensaje del usuario a la conversación
     addChatMessage('user', message);
     const userMessage = message;
     setMessage('');
@@ -52,11 +54,9 @@ const Coach = () => {
         "He tenido un problema para procesar tu pregunta. Intenta nuevamente en unos segundos."
       );
     } finally {
-      // 4. Terminar animación typing
       setIsTyping(false);
     }
   };
-
 
   const handleSuggestion = (suggestion: string) => {
     setMessage(suggestion);
@@ -81,7 +81,7 @@ const Coach = () => {
           <div>
             <h1 className="text-3xl font-bold text-header-green-foreground flex items-center gap-2">
               <Sparkles />
-              clariZink, tu Coach Financiero Personal
+              ClariZink, tu Coach Financiero Personal
             </h1>
             <p className="text-header-green-foreground/80">Asistente inteligente personalizado</p>
           </div>
@@ -100,16 +100,11 @@ const Coach = () => {
                     }`}
                 >
                   <div className="leading-relaxed">
-                    {msg.content
-                      .replace(/^"|"$|^&quot;|&quot;$/g, '')
-                      .replace(/&quot;/g, '"')
-                      .replace(/\\n/g, '\n')
-                      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                      .split('\n')
-                      .map((line, index) => (
-                        <p key={index} className={line.includes('<strong>') ? 'font-semibold mt-2 mb-1' : 'mb-1'} dangerouslySetInnerHTML={{ __html: line || '&nbsp;' }} />
-                      ))
-                    }
+                    <MarkdownResponse
+                      content={msg.content}
+                      boldClass="font-semibold mt-2 mb-1"
+                      normalClass="mb-1"
+                    />
                   </div>
                 </div>
               </div>
@@ -147,7 +142,7 @@ const Coach = () => {
               <Input
                 value={message}
                 onChange={e => setMessage(e.target.value)}
-                onKeyPress={e => e.key === 'Enter' && handleSend()}
+                onKeyDown={e => e.key === 'Enter' && handleSend()}
                 placeholder="Escribe tu pregunta..."
                 className="flex-1"
               />
